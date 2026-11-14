@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ? activeLink.textContent.trim()
       : "Overview";
 
-    sidebar.classList.remove("open");
+    if (sidebar) sidebar.classList.remove("open");
 
     window.scrollTo({
       top: 0,
@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // MOBILE SIDEBAR
   // ======================================
 
-  if (menuButton) {
+  if (menuButton && sidebar) {
     menuButton.addEventListener("click", () => {
       sidebar.classList.toggle("open");
     });
@@ -80,6 +80,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("click", event => {
     if (
       window.innerWidth <= 760 &&
+      sidebar &&
+      menuButton &&
       sidebar.classList.contains("open") &&
       !sidebar.contains(event.target) &&
       !menuButton.contains(event.target)
@@ -134,18 +136,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveIdentity = document.getElementById("saveIdentity");
   const identityMessage = document.getElementById("identityMessage");
 
-  // Restore locally saved profile information.
-  // This is a browser preview, not secure cloud storage.
-
   try {
     const savedProfile = localStorage.getItem("juniorDangoteTwinProfile");
 
     if (savedProfile) {
       const profile = JSON.parse(savedProfile);
 
-      fullName.value = profile.fullName || "";
-      aboutMe.value = profile.aboutMe || "";
-      personality.value = profile.personality || "";
+      if (fullName) fullName.value = profile.fullName || "";
+      if (aboutMe) aboutMe.value = profile.aboutMe || "";
+      if (personality) personality.value = profile.personality || "";
     }
   } catch (error) {
     console.error("Could not load saved profile:", error);
@@ -155,9 +154,9 @@ document.addEventListener("DOMContentLoaded", () => {
     saveIdentity.addEventListener("click", () => {
 
       const profile = {
-        fullName: fullName.value.trim(),
-        aboutMe: aboutMe.value.trim(),
-        personality: personality.value.trim()
+        fullName: fullName ? fullName.value.trim() : "",
+        aboutMe: aboutMe ? aboutMe.value.trim() : "",
+        personality: personality ? personality.value.trim() : ""
       };
 
       try {
@@ -166,16 +165,160 @@ document.addEventListener("DOMContentLoaded", () => {
           JSON.stringify(profile)
         );
 
-        identityMessage.textContent =
-          "Profile saved in this browser.";
+        if (identityMessage) {
+          identityMessage.textContent =
+            "Profile saved in this browser.";
+        }
 
       } catch (error) {
-        identityMessage.textContent =
-          "Unable to save profile in this browser.";
+        if (identityMessage) {
+          identityMessage.textContent =
+            "Unable to save profile in this browser.";
+        }
 
         console.error("Profile save failed:", error);
       }
     });
+  }
+
+  // ======================================
+  // CLOUDFLARE AI CHAT CONNECTION
+  // ======================================
+
+  const TWIN_API =
+    "https://junior-dangote-twin-api.ddangote701.workers.dev";
+
+  const chatInput = document.getElementById("chatInput");
+
+  const sendButton =
+    document.getElementById("sendMessage") ||
+    document.querySelector(".send-button");
+
+  const chatMessages = document.getElementById("chatMessages");
+  const chatStatus = document.querySelector(".chat-header span");
+
+  function addChatMessage(message, type) {
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "chat-message " + type + "-message";
+
+    const avatar = document.createElement("div");
+    avatar.className = "message-avatar";
+    avatar.textContent = type === "assistant" ? "✦" : "JD";
+
+    const content = document.createElement("div");
+    content.className = "message-content";
+
+    const title = document.createElement("strong");
+
+    title.textContent =
+      type === "assistant" ? "Junior Dangote Twin" : "You";
+
+    const paragraph = document.createElement("p");
+    paragraph.textContent = message;
+
+    content.appendChild(title);
+    content.appendChild(paragraph);
+
+    wrapper.appendChild(avatar);
+    wrapper.appendChild(content);
+
+    chatMessages.appendChild(wrapper);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    return paragraph;
+  }
+
+  if (chatInput && sendButton && chatMessages) {
+
+    chatInput.disabled = false;
+    sendButton.disabled = false;
+
+    chatInput.placeholder =
+      "Ask your digital twin something...";
+
+    async function sendTwinMessage() {
+
+      const message = chatInput.value.trim();
+
+      if (!message) return;
+
+      addChatMessage(message, "user");
+
+      chatInput.value = "";
+      sendButton.disabled = true;
+      chatInput.disabled = true;
+
+      const loading = addChatMessage(
+        "Thinking...",
+        "assistant"
+      );
+
+      try {
+
+        const response = await fetch(
+          TWIN_API + "/api/chat",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              message: message
+            })
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "AI request failed.");
+        }
+
+        loading.textContent =
+          data.reply || "The AI returned an empty response.";
+
+      } catch (error) {
+
+        loading.textContent =
+          "I couldn't connect to my AI brain. Please try again.";
+
+        console.error("Twin AI error:", error);
+
+      } finally {
+
+        sendButton.disabled = false;
+        chatInput.disabled = false;
+        chatInput.focus();
+
+      }
+    }
+
+    sendButton.addEventListener("click", sendTwinMessage);
+
+    chatInput.addEventListener("keydown", event => {
+
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendTwinMessage();
+      }
+
+    });
+
+    fetch(TWIN_API + "/api/health")
+      .then(response => response.json())
+      .then(data => {
+
+        if (data.success && chatStatus) {
+          chatStatus.innerHTML =
+            '<i class="status-dot"></i> AI connected';
+        }
+
+      })
+      .catch(error => {
+        console.error("AI health check failed:", error);
+      });
+
   }
 
   // ======================================
