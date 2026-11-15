@@ -511,90 +511,39 @@ function attachClinicalVerification(evidence) {
   const statusMessage = addChatMessage(details.join("\n"), "assistant");
   statusMessage.style.whiteSpace = "pre-line";
 }
-async function attachClinicalEvidence(query) {
-  const clinicalPattern =
-    /clinical|nurs|pharmacolog|drug|medication|disease|disorder|diagnos|symptom|treatment|therapy|management|furosemide|frusemide|malaria|hypertension|diabetes|infection|surgery|anatomy|physiology|older adult|elderly|geriatric|pregnan/i;
+function attachClinicalEvidence(evidence) {
+  if (!evidence || typeof evidence !== "object") return;
 
-  if (!clinicalPattern.test(query)) return;
+  const sources = Array.isArray(evidence.sources) ? evidence.sources : [];
 
-  const evidenceMessage = addChatMessage(
-    "Searching for clinical references...",
-    "assistant"
-  );
+  const lines = [
+    "📚 Clinical references supplied to the separate AI review",
+    "References supplied: " + Number(evidence.count || sources.length),
+    ""
+  ];
 
-  try {
-    const response = await fetch(
-      CLINICAL_API + "/search?q=" + encodeURIComponent(query)
-    );
-    const data = await response.json();
+  if (sources.length) {
+    sources.forEach((item, index) => {
+      lines.push(
+        (index + 1) + ". " + (item.title || "Untitled reference") +
+        (item.year ? " (" + item.year + ")" : "")
+      );
 
-    if (!response.ok) {
-      throw new Error(data.error || "Clinical search failed.");
-    }
-
-    const assessment = data.evidence_assessment || {};
-    const results = data.results || {};
-
-    const groups = [
-      ["DIRECT EVIDENCE", results.direct_general || []],
-      ["RELATED DRUG REFERENCES", results.related_drug || []],
-      ["SPECIALIZED APPLICATIONS", results.specialized_application || []],
-      ["WEAK MENTIONS", results.weak_mention || []],
-      ["RELATED CONTEXT", results.related_context || []]
-    ];
-
-    const lines = [
-      "📚 Clinical evidence search (v0.5.26)",
-      "Coverage: " + (assessment.retrieval_coverage || "not reported"),
-      "Direct general references: " +
-        (assessment.direct_general_reference_count ?? 0),
-      "Population-specific references: " +
-        (assessment.population_specific_reference_count ?? 0),
-      ""
-    ];
-
-    let total = 0;
-
-    groups.forEach(([heading, items]) => {
-      if (!Array.isArray(items) || items.length === 0) return;
-
-      lines.push(heading + ":");
-
-      items.slice(0, 3).forEach((item, index) => {
-        total++;
-
-        lines.push(
-          (index + 1) + ". " +
-          (item.title || "Untitled reference") +
-          (item.year ? " (" + item.year + ")" : "")
-        );
-
-        if (item.source) lines.push("   Source: " + item.source);
-        if (item.url) lines.push("   " + item.url);
-      });
-
+      if (item.source) lines.push("   Source: " + item.source);
+      if (item.url) lines.push("   " + item.url);
       lines.push("");
     });
 
-    if (!total) {
-      lines.push("No references were returned.");
-    }
-
     lines.push(
-      "Evidence retrieval only. References are not automatically clinical recommendations and have not been used to verify the Twin's answer."
+      "These references were retrieved before answer generation and supplied to the separate AI review. This is AI review, not human clinical verification."
     );
-
-    evidenceMessage.textContent = lines.join("\n");
-    evidenceMessage.style.whiteSpace = "pre-line";
-
-  } catch (error) {
-    evidenceMessage.textContent =
-      "Clinical evidence search is temporarily unavailable: " +
-      error.message;
-
-    console.error("Clinical evidence search failed:", error);
+  } else {
+    lines.push("No usable clinical references were supplied to the separate AI review.");
   }
-}                                         
+
+  const evidenceMessage = addChatMessage(lines.join("\n"), "assistant");
+  evidenceMessage.style.whiteSpace = "pre-line";
+}                           
   function addChatMessage(message, type) {
 
     const wrapper = document.createElement("div");
@@ -676,7 +625,7 @@ async function attachClinicalEvidence(query) {
         loading.textContent =
           data.reply || "The AI returned an empty response.";
         attachClinicalVerification(data.clinical_evidence);
-                await attachClinicalEvidence(message);
+        attachClinicalEvidence(data.clinical_evidence);
       } catch (error) {
 
         loading.textContent =
