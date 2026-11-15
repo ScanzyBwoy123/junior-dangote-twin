@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (sidebar) sidebar.classList.remove("open");
     if (pageId === "memories") loadMemoryLibrary();
-
+    if (pageId === "identity") loadIdentityProfile();
     window.scrollTo({
       top: 0,
       behavior: "smooth"
