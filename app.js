@@ -480,7 +480,77 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const chatMessages = document.getElementById("chatMessages");
   const chatStatus = document.querySelector(".chat-header span");
+    // ======================================
+  // CLINICAL EVIDENCE SEARCH - v0.5.25
+  // ======================================
+  const CLINICAL_API =
+    "https://junior-dangote-clinical-test.ddangote701.workers.dev";
 
+  async function attachClinicalEvidence(query) {
+    const clinicalPattern =
+      /clinical|nurs|pharmacolog|drug|medication|disease|disorder|diagnos|symptom|treatment|therapy|management|furosemide|frusemide|malaria|hypertension|diabetes|infection|surgery|anatomy|physiology|older adult|elderly|geriatric|pregnan/i;
+
+    if (!clinicalPattern.test(query)) return;
+
+    const evidenceMessage = addChatMessage(
+      "Searching for clinical references...",
+      "assistant"
+    );
+
+    try {
+      const response = await fetch(
+        CLINICAL_API + "/search?q=" + encodeURIComponent(query)
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Clinical search failed.");
+      }
+
+      const assessment = data.evidence_assessment || {};
+
+      const refs =
+        data.results && Array.isArray(data.results.unique)
+          ? data.results.unique.slice(0, 5)
+          : [];
+
+      const lines = [
+        "📚 Clinical evidence search (v0.5.25)",
+        "Coverage: " + (assessment.retrieval_coverage || "not reported"),
+        "General references: " +
+          (assessment.direct_general_reference_count ?? 0),
+        "Population-specific references: " +
+          (assessment.population_specific_reference_count ?? 0),
+        "",
+        refs.length ? "Retrieved references:" : "No references were returned."
+      ];
+
+      refs.forEach((item, index) => {
+        lines.push(
+          (index + 1) + ". " +
+          (item.title || "Untitled reference") +
+          (item.year ? " (" + item.year + ")" : "") +
+          " — " + (item.evidence_category || "unclassified")
+        );
+      });
+
+      lines.push(
+        "",
+        "Evidence retrieval only. This does not generate or validate a clinical answer."
+      );
+
+      evidenceMessage.textContent = lines.join("\n");
+      evidenceMessage.style.whiteSpace = "pre-line";
+
+    } catch (error) {
+      evidenceMessage.textContent =
+        "Clinical evidence search is temporarily unavailable: " +
+        error.message;
+
+      console.error("Clinical evidence search failed:", error);
+    }
+  }
   function addChatMessage(message, type) {
 
     const wrapper = document.createElement("div");
