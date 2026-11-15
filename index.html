@@ -310,7 +310,7 @@
         </section>
 
 
-        <!-- MEMORY LIBRARY -->
+                <!-- MEMORY LIBRARY -->
 
         <section class="page" id="memories">
 
@@ -318,66 +318,72 @@
             <span class="eyebrow">YOUR KNOWLEDGE BASE</span>
             <h1>Memory library</h1>
             <p>
-              A place for your personal knowledge, experiences,
-              conversations and documents.
+              Store personal facts, experiences, goals and knowledge
+              for your AI twin.
             </p>
           </div>
 
           <div class="memory-notice">
             <span>🔒</span>
             <div>
-              <strong>Approval before permanent memory</strong>
+              <strong>Your memories remain private by default</strong>
               <p>
-                New information will remain pending until you review
-                and approve it.
+                Every new memory is saved as pending and private.
+                You must review and approve it. Public visibility
+                requires a separate action.
               </p>
             </div>
           </div>
 
-          <div class="memory-grid">
+          <div class="panel">
+            <h2>Add a new memory</h2>
+            <p>Enter information you want your AI twin to remember.</p>
 
-            <div class="memory-card">
-              <div class="memory-card-icon blue">✎</div>
-              <h3>Personal information</h3>
-              <p>Facts, preferences and details you provide manually.</p>
-              <span>Manual entries</span>
+            <div class="form-group">
+              <label for="memoryContent">Memory information</label>
+              <textarea
+                id="memoryContent"
+                rows="5"
+                placeholder="Example: I enjoy learning about artificial intelligence..."
+              ></textarea>
             </div>
 
-            <div class="memory-card">
-              <div class="memory-card-icon purple">▤</div>
-              <h3>Documents & notes</h3>
-              <p>Upload documents, notes and learning materials.</p>
-              <span>File uploads</span>
+            <div class="form-group">
+              <label for="memoryCategory">Category</label>
+              <select id="memoryCategory">
+                <option value="general">General</option>
+                <option value="identity">Personal information</option>
+                <option value="education">Education</option>
+                <option value="career">Career</option>
+                <option value="interests">Interests and hobbies</option>
+                <option value="personality">Personality</option>
+                <option value="preferences">Preferences</option>
+                <option value="experiences">Experiences</option>
+                <option value="goals">Goals and ambitions</option>
+              </select>
             </div>
 
-            <div class="memory-card">
-              <div class="memory-card-icon cyan">◉</div>
-              <h3>Experiences</h3>
-              <p>Preserve important personal experiences and stories.</p>
-              <span>Personal history</span>
-            </div>
+            <button type="button" id="addMemory">
+              Save as pending memory
+            </button>
 
-            <div class="memory-card">
-              <div class="memory-card-icon green">◌</div>
-              <h3>Conversations</h3>
-              <p>Information from conversations, with appropriate consent.</p>
-              <span>Conversation memory</span>
-            </div>
-
+            <p id="memoryMessage" aria-live="polite"></p>
           </div>
 
-          <div class="panel empty-state">
-            <div class="empty-icon">▤</div>
-            <h2>Your memory library is waiting</h2>
-            <p>
-              Approved memories and uploaded materials will appear here
-              when the storage system is connected.
-            </p>
+          <div class="panel">
+            <div class="page-heading">
+              <h2>Stored memories</h2>
+              <p>Review and manage the information stored in your AI twin.</p>
+            </div>
+
+            <div id="memoryList">
+              <p>Your memories will appear here.</p>
+            </div>
           </div>
 
         </section>
 
-
+        <!-- IDENTITY -->
         <!-- IDENTITY -->
 
         <section class="page" id="identity">
