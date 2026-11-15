@@ -189,8 +189,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  loadIdentityProfile();
-
   if (saveIdentity) {
     saveIdentity.addEventListener("click", async () => {
       const key = getOwnerKey();
