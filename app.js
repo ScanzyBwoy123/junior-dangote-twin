@@ -650,6 +650,7 @@ async function attachClinicalEvidence(query) {
 
         loading.textContent =
           data.reply || "The AI returned an empty response.";
+        attachClinicalVerification(data.clinical_evidence);
                 await attachClinicalEvidence(message);
       } catch (error) {
 
