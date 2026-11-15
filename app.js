@@ -417,7 +417,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (action === "visibility") {
-          const isPublic = card.textContent.includes("public");
+          const isPublic = card.querySelector("p").textContent.includes("public");
 
           const visibility = isPublic ? "private" : "public";
 
