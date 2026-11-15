@@ -44,6 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
       : "Overview";
 
     if (sidebar) sidebar.classList.remove("open");
+    if (pageId === "memories") loadMemoryLibrary();
 
     window.scrollTo({
       top: 0,
