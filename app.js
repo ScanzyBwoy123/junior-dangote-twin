@@ -261,6 +261,210 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+    // ======================================
+  // MEMORY LIBRARY - CLOUDFLARE D1
+  // ======================================
+
+  const memoryContent = document.getElementById("memoryContent");
+  const memoryCategory = document.getElementById("memoryCategory");
+  const addMemoryButton = document.getElementById("addMemory");
+  const memoryList = document.getElementById("memoryList");
+  const memoryMessage = document.getElementById("memoryMessage");
+
+  function escapeMemoryHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[char]);
+  }
+
+  async function memoryRequest(path, method = "GET", body = null) {
+    const key = getOwnerKey();
+
+    if (!key) throw new Error("Owner access key is required.");
+
+    const options = {
+      method,
+      headers: {
+        "Authorization": "Bearer " + key
+      }
+    };
+
+    if (body) {
+      options.headers["Content-Type"] = "application/json";
+      options.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(IDENTITY_API + path, options);
+    const data = await response.json();
+
+    if (response.status === 401) {
+      sessionStorage.removeItem("juniorTwinOwnerKey");
+      throw new Error("Access key incorrect. Please try again.");
+    }
+
+    if (!response.ok || data.success === false) {
+      throw new Error(data.error || "Memory request failed.");
+    }
+
+    return data;
+  }
+
+  async function loadMemoryLibrary() {
+    if (!memoryList) return;
+
+    memoryList.innerHTML = "<p>Loading memories...</p>";
+
+    try {
+      const result = await memoryRequest("/api/admin/memories");
+
+      const memories = Array.isArray(result)
+        ? result
+        : result.memories || result.data || [];
+
+      if (!memories.length) {
+        memoryList.innerHTML = "<p>No memories saved yet.</p>";
+        return;
+      }
+
+      memoryList.innerHTML = memories.map(memory => `
+        <div class="memory-card" data-memory-id="${escapeMemoryHTML(memory.id)}">
+          <p>
+            <strong>${escapeMemoryHTML(memory.category || "General")}</strong>
+            · ${escapeMemoryHTML(memory.status || "pending")}
+            · ${escapeMemoryHTML(memory.visibility || "private")}
+          </p>
+
+          <p>${escapeMemoryHTML(memory.content)}</p>
+
+          <button type="button" data-action="approve">Approve</button>
+          <button type="button" data-action="reject">Reject</button>
+          <button type="button" data-action="edit">Edit</button>
+          <button type="button" data-action="visibility">
+            Make ${memory.visibility === "public" ? "Private" : "Public"}
+          </button>
+          <button type="button" data-action="delete">Delete</button>
+        </div>
+      `).join("");
+
+    } catch (error) {
+      memoryList.innerHTML = "";
+      if (memoryMessage) memoryMessage.textContent = error.message;
+    }
+  }
+
+  if (addMemoryButton) {
+    addMemoryButton.addEventListener("click", async () => {
+      const content = memoryContent.value.trim();
+      const category = memoryCategory.value;
+
+      if (!content) {
+        memoryMessage.textContent = "Enter some memory information first.";
+        return;
+      }
+
+      addMemoryButton.disabled = true;
+      memoryMessage.textContent = "Saving memory...";
+
+      try {
+        await memoryRequest("/api/admin/memories", "POST", {
+          content,
+          category,
+          status: "pending",
+          visibility: "private"
+        });
+
+        memoryContent.value = "";
+        memoryMessage.textContent =
+          "✅ Memory saved as pending and private.";
+
+        await loadMemoryLibrary();
+
+      } catch (error) {
+        memoryMessage.textContent = error.message;
+      } finally {
+        addMemoryButton.disabled = false;
+      }
+    });
+  }
+
+  if (memoryList) {
+    memoryList.addEventListener("click", async event => {
+      const button = event.target.closest("button[data-action]");
+      if (!button) return;
+
+      const card = button.closest("[data-memory-id]");
+      if (!card) return;
+
+      const id = card.dataset.memoryId;
+      const action = button.dataset.action;
+
+      try {
+        let update = null;
+
+        if (action === "approve") {
+          if (!confirm("Approve this memory? It will remain private.")) return;
+          update = { status: "approved" };
+        }
+
+        if (action === "reject") {
+          if (!confirm("Reject this memory?")) return;
+          update = { status: "rejected" };
+        }
+
+        if (action === "visibility") {
+          const isPublic = card.textContent.includes("public");
+
+          const visibility = isPublic ? "private" : "public";
+
+          if (visibility === "public" &&
+              !confirm("Make this memory public? The public AI twin may use it.")) {
+            return;
+          }
+
+          update = { visibility };
+        }
+
+        if (action === "edit") {
+          const oldContent = card.querySelectorAll("p")[1]?.textContent || "";
+          const content = prompt("Edit this memory:", oldContent);
+
+          if (content === null || !content.trim()) return;
+          update = { content: content.trim() };
+        }
+
+        if (action === "delete") {
+          if (!confirm("Permanently delete this memory?")) return;
+
+          await memoryRequest(
+            "/api/admin/memories/" + encodeURIComponent(id),
+            "DELETE"
+          );
+
+          memoryMessage.textContent = "Memory deleted.";
+          await loadMemoryLibrary();
+          return;
+        }
+
+        if (update) {
+          await memoryRequest(
+            "/api/admin/memories/" + encodeURIComponent(id),
+            "PATCH",
+            update
+          );
+
+          memoryMessage.textContent = "Memory updated successfully.";
+          await loadMemoryLibrary();
+        }
+
+      } catch (error) {
+        memoryMessage.textContent = error.message;
+      }
+    });
+  }
 
   // ======================================
   // CLOUDFLARE AI CHAT CONNECTION
