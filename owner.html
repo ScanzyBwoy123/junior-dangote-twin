@@ -482,7 +482,35 @@ async function deleteMemory(id) {
     message.textContent = error.message;
   }
 }
+  const privateChatButton = document.getElementById("privateChatButton");
+const privateChatInput = document.getElementById("privateChatInput");
+const privateChatReply = document.getElementById("privateChatReply");
 
+privateChatButton.addEventListener("click", async () => {
+  const question = privateChatInput.value.trim();
+
+  if (!question) {
+    privateChatReply.textContent = "Enter a question first.";
+    return;
+  }
+
+  privateChatButton.disabled = true;
+  privateChatReply.textContent = "Thinking...";
+
+  try {
+    const result = await apiRequest("/api/admin/chat", "POST", {
+      message: question
+    });
+
+    privateChatReply.textContent = result.reply || "No response received.";
+    privateChatInput.value = "";
+
+  } catch (error) {
+    privateChatReply.textContent = error.message;
+  } finally {
+    privateChatButton.disabled = false;
+  }
+});
 document.getElementById("loginButton").addEventListener("click", login);
 document.getElementById("logoutButton").addEventListener("click", logout);
 document.getElementById("refreshButton").addEventListener("click", loadMemories);
