@@ -154,10 +154,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function loadIdentityProfile() {
-    const key = sessionStorage.getItem("juniorTwinOwnerKey");
+    const key = getOwnerKey();
 
     if (!key) return;
-
     try {
       const response = await fetch(
         IDENTITY_API + "/api/admin/identity",
