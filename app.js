@@ -125,10 +125,12 @@ document.addEventListener("DOMContentLoaded", () => {
       reader.readAsDataURL(file);
     });
   }
+    // ======================================
+  // PROFILE INFORMATION - CLOUDFLARE
+  // ======================================
 
-  // ======================================
-  // PROFILE INFORMATION
-  // ======================================
+  const IDENTITY_API =
+    "https://junior-dangote-twin-api.ddangote701.workers.dev";
 
   const fullName = document.getElementById("fullName");
   const aboutMe = document.getElementById("aboutMe");
@@ -136,47 +138,127 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveIdentity = document.getElementById("saveIdentity");
   const identityMessage = document.getElementById("identityMessage");
 
-  try {
-    const savedProfile = localStorage.getItem("juniorDangoteTwinProfile");
+  function getOwnerKey() {
+    let key = sessionStorage.getItem("juniorTwinOwnerKey");
 
-    if (savedProfile) {
-      const profile = JSON.parse(savedProfile);
+    if (!key) {
+      key = prompt("Enter your private owner access key:");
 
-      if (fullName) fullName.value = profile.fullName || "";
-      if (aboutMe) aboutMe.value = profile.aboutMe || "";
-      if (personality) personality.value = profile.personality || "";
+      if (key && key.trim()) {
+        key = key.trim();
+        sessionStorage.setItem("juniorTwinOwnerKey", key);
+      }
     }
-  } catch (error) {
-    console.error("Could not load saved profile:", error);
+
+    return key;
   }
 
+  async function loadIdentityProfile() {
+    const key = sessionStorage.getItem("juniorTwinOwnerKey");
+
+    if (!key) return;
+
+    try {
+      const response = await fetch(
+        IDENTITY_API + "/api/admin/identity",
+        {
+          headers: {
+            "Authorization": "Bearer " + key
+          }
+        }
+      );
+
+      if (response.status === 401) {
+        sessionStorage.removeItem("juniorTwinOwnerKey");
+        return;
+      }
+
+      if (!response.ok) throw new Error("Could not load profile.");
+
+      const data = await response.json();
+      const profile = data.profile;
+
+      if (profile) {
+        if (fullName) fullName.value = profile.display_name || "";
+        if (aboutMe) aboutMe.value = profile.public_bio || "";
+        if (personality) personality.value = profile.personality || "";
+      }
+
+    } catch (error) {
+      console.error("Profile loading failed:", error);
+    }
+  }
+
+  loadIdentityProfile();
+
   if (saveIdentity) {
-    saveIdentity.addEventListener("click", () => {
+    saveIdentity.addEventListener("click", async () => {
+      const key = getOwnerKey();
+
+      if (!key) {
+        if (identityMessage) {
+          identityMessage.textContent = "Owner access key is required.";
+        }
+        return;
+      }
 
       const profile = {
-        fullName: fullName ? fullName.value.trim() : "",
-        aboutMe: aboutMe ? aboutMe.value.trim() : "",
+        display_name: fullName ? fullName.value.trim() : "",
+        public_bio: aboutMe ? aboutMe.value.trim() : "",
         personality: personality ? personality.value.trim() : ""
       };
 
+      if (!profile.display_name) {
+        if (identityMessage) {
+          identityMessage.textContent = "Enter a public display name.";
+        }
+        return;
+      }
+
+      if (identityMessage) {
+        identityMessage.textContent = "Saving to Cloudflare...";
+      }
+
+      saveIdentity.disabled = true;
+
       try {
-        localStorage.setItem(
-          "juniorDangoteTwinProfile",
-          JSON.stringify(profile)
+        const response = await fetch(
+          IDENTITY_API + "/api/admin/identity",
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer " + key
+            },
+            body: JSON.stringify(profile)
+          }
         );
+
+        const data = await response.json();
+
+        if (response.status === 401) {
+          sessionStorage.removeItem("juniorTwinOwnerKey");
+          throw new Error("Access key is incorrect. Please try again.");
+        }
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || "Profile could not be saved.");
+        }
 
         if (identityMessage) {
           identityMessage.textContent =
-            "Profile saved in this browser.";
+            "✅ Identity profile saved successfully to Cloudflare.";
         }
 
       } catch (error) {
         if (identityMessage) {
-          identityMessage.textContent =
-            "Unable to save profile in this browser.";
+          identityMessage.textContent = error.message;
         }
 
         console.error("Profile save failed:", error);
+
+      } finally {
+        saveIdentity.disabled = false;
       }
     });
   }
