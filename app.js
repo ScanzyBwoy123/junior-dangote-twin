@@ -485,7 +485,32 @@ document.addEventListener("DOMContentLoaded", () => {
 // ======================================
 const CLINICAL_API =
   "https://junior-dangote-clinical-test.ddangote701.workers.dev";
+function attachClinicalVerification(evidence) {
+  if (!evidence || typeof evidence !== "object") return;
 
+  const status = evidence.verification_status || "status_not_returned";
+  const count = Number(evidence.count || 0);
+
+  let label = "⚠️ Clinical review status unavailable";
+
+  if (status === "ai_reviewed_against_retrieved_references") {
+    label = "🔍 Separate AI review completed using retrieved references. This is an AI review, not human clinical verification.";
+  } else if (status === "review_unavailable") {
+    label = "⚠️ References were retrieved, but the separate AI review could not be completed.";
+  } else if (status === "no_references_to_review") {
+    label = "⚠️ No usable clinical references were available for the separate AI review.";
+  } else if (status === "not_reviewed") {
+    label = "⚠️ The answer has not been reviewed against clinical references.";
+  }
+
+  const details = [
+    label,
+    "References supplied to the API review: " + count
+  ];
+
+  const statusMessage = addChatMessage(details.join("\n"), "assistant");
+  statusMessage.style.whiteSpace = "pre-line";
+}
 async function attachClinicalEvidence(query) {
   const clinicalPattern =
     /clinical|nurs|pharmacolog|drug|medication|disease|disorder|diagnos|symptom|treatment|therapy|management|furosemide|frusemide|malaria|hypertension|diabetes|infection|surgery|anatomy|physiology|older adult|elderly|geriatric|pregnan/i;
