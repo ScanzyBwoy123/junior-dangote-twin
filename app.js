@@ -631,7 +631,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         loading.textContent =
           data.reply || "The AI returned an empty response.";
-
+                await attachClinicalEvidence(message);
       } catch (error) {
 
         loading.textContent =
