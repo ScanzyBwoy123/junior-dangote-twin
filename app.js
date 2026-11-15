@@ -479,78 +479,97 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector(".send-button");
 
   const chatMessages = document.getElementById("chatMessages");
-  const chatStatus = document.querySelector(".chat-header span");
-    // ======================================
-  // CLINICAL EVIDENCE SEARCH - v0.5.25
-  // ======================================
-  const CLINICAL_API =
-    "https://junior-dangote-clinical-test.ddangote701.workers.dev";
+  const chatStatus = document.querySelector(".chat-header 
+   // ======================================
+// CLINICAL EVIDENCE SEARCH - v0.5.26
+// ======================================
+const CLINICAL_API =
+  "https://junior-dangote-clinical-test.ddangote701.workers.dev";
 
-  async function attachClinicalEvidence(query) {
-    const clinicalPattern =
-      /clinical|nurs|pharmacolog|drug|medication|disease|disorder|diagnos|symptom|treatment|therapy|management|furosemide|frusemide|malaria|hypertension|diabetes|infection|surgery|anatomy|physiology|older adult|elderly|geriatric|pregnan/i;
+async function attachClinicalEvidence(query) {
+  const clinicalPattern =
+    /clinical|nurs|pharmacolog|drug|medication|disease|disorder|diagnos|symptom|treatment|therapy|management|furosemide|frusemide|malaria|hypertension|diabetes|infection|surgery|anatomy|physiology|older adult|elderly|geriatric|pregnan/i;
 
-    if (!clinicalPattern.test(query)) return;
+  if (!clinicalPattern.test(query)) return;
 
-    const evidenceMessage = addChatMessage(
-      "Searching for clinical references...",
-      "assistant"
+  const evidenceMessage = addChatMessage(
+    "Searching for clinical references...",
+    "assistant"
+  );
+
+  try {
+    const response = await fetch(
+      CLINICAL_API + "/search?q=" + encodeURIComponent(query)
     );
+    const data = await response.json();
 
-    try {
-      const response = await fetch(
-        CLINICAL_API + "/search?q=" + encodeURIComponent(query)
-      );
+    if (!response.ok) {
+      throw new Error(data.error || "Clinical search failed.");
+    }
 
-      const data = await response.json();
+    const assessment = data.evidence_assessment || {};
+    const results = data.results || {};
 
-      if (!response.ok) {
-        throw new Error(data.error || "Clinical search failed.");
-      }
+    const groups = [
+      ["DIRECT EVIDENCE", results.direct_general || []],
+      ["RELATED DRUG REFERENCES", results.related_drug || []],
+      ["SPECIALIZED APPLICATIONS", results.specialized_application || []],
+      ["WEAK MENTIONS", results.weak_mention || []],
+      ["RELATED CONTEXT", results.related_context || []]
+    ];
 
-      const assessment = data.evidence_assessment || {};
+    const lines = [
+      "📚 Clinical evidence search (v0.5.26)",
+      "Coverage: " + (assessment.retrieval_coverage || "not reported"),
+      "Direct general references: " +
+        (assessment.direct_general_reference_count ?? 0),
+      "Population-specific references: " +
+        (assessment.population_specific_reference_count ?? 0),
+      ""
+    ];
 
-      const refs =
-        data.results && Array.isArray(data.results.unique)
-          ? data.results.unique.slice(0, 5)
-          : [];
+    let total = 0;
 
-      const lines = [
-        "📚 Clinical evidence search (v0.5.25)",
-        "Coverage: " + (assessment.retrieval_coverage || "not reported"),
-        "General references: " +
-          (assessment.direct_general_reference_count ?? 0),
-        "Population-specific references: " +
-          (assessment.population_specific_reference_count ?? 0),
-        "",
-        refs.length ? "Retrieved references:" : "No references were returned."
-      ];
+    groups.forEach(([heading, items]) => {
+      if (!Array.isArray(items) || items.length === 0) return;
 
-      refs.forEach((item, index) => {
+      lines.push(heading + ":");
+
+      items.slice(0, 3).forEach((item, index) => {
+        total++;
+
         lines.push(
           (index + 1) + ". " +
           (item.title || "Untitled reference") +
-          (item.year ? " (" + item.year + ")" : "") +
-          " — " + (item.evidence_category || "unclassified")
+          (item.year ? " (" + item.year + ")" : "")
         );
+
+        if (item.source) lines.push("   Source: " + item.source);
+        if (item.url) lines.push("   " + item.url);
       });
 
-      lines.push(
-        "",
-        "Evidence retrieval only. This does not generate or validate a clinical answer."
-      );
+      lines.push("");
+    });
 
-      evidenceMessage.textContent = lines.join("\n");
-      evidenceMessage.style.whiteSpace = "pre-line";
-
-    } catch (error) {
-      evidenceMessage.textContent =
-        "Clinical evidence search is temporarily unavailable: " +
-        error.message;
-
-      console.error("Clinical evidence search failed:", error);
+    if (!total) {
+      lines.push("No references were returned.");
     }
+
+    lines.push(
+      "Evidence retrieval only. References are not automatically clinical recommendations and have not been used to verify the Twin's answer."
+    );
+
+    evidenceMessage.textContent = lines.join("\n");
+    evidenceMessage.style.whiteSpace = "pre-line";
+
+  } catch (error) {
+    evidenceMessage.textContent =
+      "Clinical evidence search is temporarily unavailable: " +
+      error.message;
+
+    console.error("Clinical evidence search failed:", error);
   }
+}                                         
   function addChatMessage(message, type) {
 
     const wrapper = document.createElement("div");
