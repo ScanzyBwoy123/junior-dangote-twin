@@ -1302,3 +1302,84 @@ button {
     align-items: flex-start;
   }
 }
+/* MEMORY LIBRARY FORM */
+
+#memories .panel {
+  margin-bottom: 22px;
+}
+
+#memories .form-group {
+  margin: 20px 0;
+}
+
+#memories .form-group label {
+  display: block;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 9px;
+}
+
+#memories #memoryContent,
+#memories #memoryCategory {
+  width: 100%;
+  background: #0b1324;
+  color: #f4f6ff;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 13px;
+  outline: none;
+  font-size: 13px;
+}
+
+#memories #memoryContent {
+  min-height: 120px;
+  resize: vertical;
+}
+
+#memories #memoryContent:focus,
+#memories #memoryCategory:focus {
+  border-color: var(--blue);
+}
+
+#memories #memoryCategory option {
+  background: #10182b;
+  color: white;
+}
+
+#memories button {
+  background: linear-gradient(110deg, #5685ff, #8069f4);
+  color: white;
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 15px;
+  margin: 5px 5px 5px 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+#memories button:disabled {
+  opacity: .5;
+}
+
+#memories #memoryMessage {
+  margin-top: 12px;
+  color: var(--green);
+  font-size: 12px;
+}
+
+#memories #memoryList .memory-card {
+  padding: 18px;
+  margin-top: 15px;
+  overflow-wrap: anywhere;
+}
+
+#memories #memoryList .memory-card p {
+  color: var(--text);
+  line-height: 1.8;
+  margin-bottom: 12px;
+}
+
+#memories #memoryList .memory-card button {
+  font-size: 11px;
+}
