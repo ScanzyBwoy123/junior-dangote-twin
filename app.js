@@ -485,8 +485,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // ======================================
 const CLINICAL_API =
   "https://junior-dangote-clinical-test.ddangote701.workers.dev";
-function attachClinicalVerification(evidence) {
-  if (!evidence || typeof evidence !== "object") return;
+  if (!evidence || typeof evidence !== "object" || evidence.status === "not_required") return;
 
   const status = evidence.verification_status || "status_not_returned";
   const count = Number(evidence.count || 0);
@@ -511,8 +510,7 @@ function attachClinicalVerification(evidence) {
   const statusMessage = addChatMessage(details.join("\n"), "assistant");
   statusMessage.style.whiteSpace = "pre-line";
 }
-function attachClinicalEvidence(evidence) {
-  if (!evidence || typeof evidence !== "object") return;
+  if (!evidence || typeof evidence !== "object" || evidence.status === "not_required") return;
 
   const sources = Array.isArray(evidence.sources) ? evidence.sources : [];
 
