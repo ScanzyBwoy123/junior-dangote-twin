@@ -307,9 +307,41 @@
               </div>
             </div>
 
-            <div class="chat-input-area">
-  <textarea id="chatInput" placeholder="Ask your digital twin something..."></textarea>
-  <button id="sendMessage" class="send-button" type="button">↑</button>
+    <div class="voice-toolbar">
+  <span id="voiceStatus" role="status" aria-live="polite">
+    Voice ready
+  </span>
+
+  <div class="voice-actions">
+    <button id="voiceInput" class="voice-button" type="button">
+      🎙 Speak
+    </button>
+
+    <button id="voiceOutput" class="voice-button" type="button"
+      aria-pressed="true">
+      🔊 Voice on
+    </button>
+
+    <button id="stopVoice" class="voice-button voice-stop" type="button">
+      ■ Stop
+    </button>
+  </div>
+</div>
+
+<div class="chat-input-area">
+  <textarea
+    id="chatInput"
+    placeholder="Ask your digital twin something..."
+    aria-label="Message your digital twin">
+  </textarea>
+
+  <button
+    id="sendMessage"
+    class="send-button"
+    type="button"
+    aria-label="Send message">
+    ↑
+  </button>
 </div>
 
             <p class="chat-disclaimer">
