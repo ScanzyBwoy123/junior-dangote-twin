@@ -307,25 +307,37 @@
               </div>
             </div>
 
-    <div class="voice-toolbar">
-  <span id="voiceStatus" role="status" aria-live="polite">
-    Voice ready
-  </span>
+    <div class="voice-actions">
 
-  <div class="voice-actions">
-    <button id="voiceInput" class="voice-button" type="button">
-      🎙 Speak
-    </button>
+  <button id="voiceInput" class="voice-button" type="button"
+    aria-label="Start voice input" title="Speak">
 
-    <button id="voiceOutput" class="voice-button" type="button"
-      aria-pressed="true">
-      🔊 Voice on
-    </button>
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="9" y="3" width="6" height="12" rx="3"/>
+      <path d="M5 11a7 7 0 0 0 14 0"/>
+      <path d="M12 18v3M9 21h6"/>
+    </svg>
+    <span>Speak</span>
+  </button>
 
-    <button id="stopVoice" class="voice-button voice-stop" type="button">
-      ■ Stop
-    </button>
-  </div>
+  <button id="voiceOutput" class="voice-button" type="button"
+    aria-pressed="true" title="Toggle spoken replies">
+
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 10v4"/>
+    </svg>
+    <span>Voice on</span>
+  </button>
+
+  <button id="stopVoice" class="voice-button voice-stop"
+    type="button" aria-label="Stop voice" title="Stop">
+
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="7" y="7" width="10" height="10" rx="2"/>
+    </svg>
+    <span>Stop</span>
+  </button>
+
 </div>
 
 <div class="chat-input-area">
