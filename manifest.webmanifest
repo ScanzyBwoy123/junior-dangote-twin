@@ -1,0 +1,16 @@
+{
+  "name": "Junior Dangote Twin",
+  "short_name": "Junior Twin",
+  "description": "Personal AI Digital Twin with memory, voice and personality",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#080d18",
+  "theme_color": "#080d18",
+  "icons": [
+    {
+      "src": "./AEB62E8D-64C8-4644-9884-5245CF1E0169.png",
+      "type": "image/png"
+    }
+  ]
+}
