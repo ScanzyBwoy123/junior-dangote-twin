@@ -479,7 +479,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector(".send-button");
 
   const chatMessages = document.getElementById("chatMessages");
-  const chatStatus = document.querySelector(".chat-header 
+  const chatStatus = document.querySelector(".chat-header span");
       // ======================================
   // CLINICAL EVIDENCE SEARCH - v0.5.26
   // ======================================
