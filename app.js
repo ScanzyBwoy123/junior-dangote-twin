@@ -717,7 +717,7 @@ if (voiceInputButton) {
     recognition.onstart = () => {
       isListening = true;
       voiceInputButton.classList.add("is-active");
-      voiceInputButton.textContent = "● Listening";
+      voiceInputButton.querySelector("span").textContent = "Listening";
       setVoiceStatus("Listening… speak now");
     };
 
@@ -738,7 +738,7 @@ if (voiceInputButton) {
     recognition.onend = () => {
       isListening = false;
       voiceInputButton.classList.remove("is-active");
-      voiceInputButton.textContent = "🎙 Speak";
+      voiceInputButton.querySelector("span").textContent = "Speak";
 
       if (chatInput.value.trim()) {
         setVoiceStatus("Transcript ready — review and tap send");
@@ -775,8 +775,8 @@ if (voiceOutputButton) {
       String(voiceEnabled)
     );
 
-    voiceOutputButton.textContent =
-      voiceEnabled ? "🔊 Voice on" : "🔇 Voice off";
+    voiceOutputButton.querySelector("span").textContent =
+  voiceEnabled ? "Voice on" : "Voice off";
 
     if (!voiceEnabled) {
       stopTwinSpeech();
