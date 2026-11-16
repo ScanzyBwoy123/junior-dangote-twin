@@ -626,9 +626,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         loading.textContent =
-          data.reply || "The AI returned an empty response.";
-        attachClinicalVerification(data.clinical_evidence);
-        attachClinicalEvidence(data.clinical_evidence);
+  data.reply || "The AI returned an empty response.";
+
+speakTwinReply(data.reply || "");
+
+attachClinicalVerification(data.clinical_evidence);
+attachClinicalEvidence(data.clinical_evidence);
       } catch (error) {
 
         loading.textContent =
@@ -644,7 +647,167 @@ document.addEventListener("DOMContentLoaded", () => {
 
       }
     }
+    // ======================================
+// JUNIOR TWIN VOICE EXPERIENCE
+// ======================================
 
+const voiceInputButton = document.getElementById("voiceInput");
+const voiceOutputButton = document.getElementById("voiceOutput");
+const stopVoiceButton = document.getElementById("stopVoice");
+const voiceStatus = document.getElementById("voiceStatus");
+
+const SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
+
+let recognition = null;
+let isListening = false;
+let voiceEnabled = true;
+
+function setVoiceStatus(message) {
+  if (voiceStatus) voiceStatus.textContent = message;
+}
+
+function stopTwinSpeech() {
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
+
+  setVoiceStatus(isListening ? "Listening…" : "Voice ready");
+}
+
+function speakTwinReply(text) {
+  if (!voiceEnabled || !("speechSynthesis" in window) || !text) return;
+
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+
+  utterance.lang = "en-GH";
+  utterance.rate = 1;
+  utterance.pitch = 1;
+
+  utterance.onstart = () => {
+    setVoiceStatus("Junior Twin is speaking…");
+  };
+
+  utterance.onend = () => {
+    setVoiceStatus("Voice ready");
+  };
+
+  utterance.onerror = () => {
+    setVoiceStatus("Speech playback unavailable");
+  };
+
+  window.speechSynthesis.speak(utterance);
+}
+
+// VOICE INPUT
+
+if (voiceInputButton) {
+  if (!SpeechRecognition) {
+    voiceInputButton.disabled = true;
+    setVoiceStatus("Voice input is not supported by this browser");
+  } else {
+    recognition = new SpeechRecognition();
+
+    recognition.lang = "en-GH";
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onstart = () => {
+      isListening = true;
+      voiceInputButton.classList.add("is-active");
+      voiceInputButton.textContent = "● Listening";
+      setVoiceStatus("Listening… speak now");
+    };
+
+    recognition.onresult = event => {
+      let transcript = "";
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+
+      chatInput.value = transcript.trim();
+    };
+
+    recognition.onerror = event => {
+      setVoiceStatus("Voice input error: " + event.error);
+    };
+
+    recognition.onend = () => {
+      isListening = false;
+      voiceInputButton.classList.remove("is-active");
+      voiceInputButton.textContent = "🎙 Speak";
+
+      if (chatInput.value.trim()) {
+        setVoiceStatus("Transcript ready — review and tap send");
+      } else {
+        setVoiceStatus("Voice ready");
+      }
+    };
+
+    voiceInputButton.addEventListener("click", () => {
+      if (isListening) {
+        recognition.stop();
+        return;
+      }
+
+      stopTwinSpeech();
+
+      try {
+        recognition.start();
+      } catch (error) {
+        setVoiceStatus("Microphone could not start. Try again.");
+      }
+    });
+  }
+}
+
+// VOICE OUTPUT
+
+if (voiceOutputButton) {
+  voiceOutputButton.addEventListener("click", () => {
+    voiceEnabled = !voiceEnabled;
+
+    voiceOutputButton.setAttribute(
+      "aria-pressed",
+      String(voiceEnabled)
+    );
+
+    voiceOutputButton.textContent =
+      voiceEnabled ? "🔊 Voice on" : "🔇 Voice off";
+
+    if (!voiceEnabled) {
+      stopTwinSpeech();
+    } else {
+      setVoiceStatus("Spoken replies enabled");
+    }
+  });
+}
+
+// STOP ALL VOICE
+
+if (stopVoiceButton) {
+  stopVoiceButton.addEventListener("click", () => {
+    if (recognition && isListening) {
+      recognition.stop();
+    }
+
+    stopTwinSpeech();
+    setVoiceStatus("Voice stopped");
+  });
+}
+
+window.addEventListener("beforeunload", () => {
+  if (recognition && isListening) {
+    recognition.stop();
+  }
+
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
+});
     sendButton.addEventListener("click", sendTwinMessage);
 
     chatInput.addEventListener("keydown", event => {
