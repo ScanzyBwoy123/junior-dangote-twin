@@ -479,69 +479,74 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector(".send-button");
 
   const chatMessages = document.getElementById("chatMessages");
-  const chatStatus = document.querySelector(".chat-header span");
-   // ======================================
-// CLINICAL EVIDENCE SEARCH - v0.5.26
-// ======================================
-const CLINICAL_API =
-  "https://junior-dangote-clinical-test.ddangote701.workers.dev";
-  if (!evidence || typeof evidence !== "object" || evidence.status === "not_required") return;
+  const chatStatus = document.querySelector(".chat-header 
+      // ======================================
+  // CLINICAL EVIDENCE SEARCH - v0.5.26
+  // ======================================
 
-  const status = evidence.verification_status || "status_not_returned";
-  const count = Number(evidence.count || 0);
+  const CLINICAL_API =
+    "https://junior-dangote-clinical-test.ddangote701.workers.dev";
 
-  let label = "⚠️ Clinical review status unavailable";
+  function attachClinicalVerification(evidence) {
+    if (!evidence || typeof evidence !== "object" || evidence.status === "not_required") return;
 
-  if (status === "ai_reviewed_against_retrieved_references") {
-    label = "🔍 Separate AI review completed using retrieved references. This is an AI review, not human clinical verification.";
-  } else if (status === "review_unavailable") {
-    label = "⚠️ References were retrieved, but the separate AI review could not be completed.";
-  } else if (status === "no_references_to_review") {
-    label = "⚠️ No usable clinical references were available for the separate AI review.";
-  } else if (status === "not_reviewed") {
-    label = "⚠️ The answer has not been reviewed against clinical references.";
+    const status = evidence.verification_status || "status_not_returned";
+    const count = Number(evidence.count || 0);
+
+    let label = "⚠️ Clinical review status unavailable";
+
+    if (status === "ai_reviewed_against_retrieved_references") {
+      label = "🔍 Separate AI review completed using retrieved references. This is an AI review, not human clinical verification.";
+    } else if (status === "review_unavailable") {
+      label = "⚠️ References were retrieved, but the separate AI review could not be completed.";
+    } else if (status === "no_references_to_review") {
+      label = "⚠️ No usable clinical references were available for the separate AI review.";
+    } else if (status === "not_reviewed") {
+      label = "⚠️ The answer has not been reviewed against clinical references.";
+    }
+
+    const details = [
+      label,
+      "References supplied to the API review: " + count
+    ];
+
+    const statusMessage = addChatMessage(details.join("\n"), "assistant");
+    statusMessage.style.whiteSpace = "pre-line";
   }
 
-  const details = [
-    label,
-    "References supplied to the API review: " + count
-  ];
+  function attachClinicalEvidence(evidence) {
+    if (!evidence || typeof evidence !== "object" || evidence.status === "not_required") return;
 
-  const statusMessage = addChatMessage(details.join("\n"), "assistant");
-  statusMessage.style.whiteSpace = "pre-line";
-}
-  if (!evidence || typeof evidence !== "object" || evidence.status === "not_required") return;
+    const sources = Array.isArray(evidence.sources) ? evidence.sources : [];
 
-  const sources = Array.isArray(evidence.sources) ? evidence.sources : [];
+    const lines = [
+      "📚 Clinical references supplied to the separate AI review",
+      "References supplied: " + Number(evidence.count || sources.length),
+      ""
+    ];
 
-  const lines = [
-    "📚 Clinical references supplied to the separate AI review",
-    "References supplied: " + Number(evidence.count || sources.length),
-    ""
-  ];
+    if (sources.length) {
+      sources.forEach((item, index) => {
+        lines.push(
+          (index + 1) + ". " + (item.title || "Untitled reference") +
+          (item.year ? " (" + item.year + ")" : "")
+        );
 
-  if (sources.length) {
-    sources.forEach((item, index) => {
+        if (item.source) lines.push("   Source: " + item.source);
+        if (item.url) lines.push("   " + item.url);
+        lines.push("");
+      });
+
       lines.push(
-        (index + 1) + ". " + (item.title || "Untitled reference") +
-        (item.year ? " (" + item.year + ")" : "")
+        "These references were retrieved before answer generation and supplied to the separate AI review. This is AI review, not human clinical verification."
       );
+    } else {
+      lines.push("No usable clinical references were supplied to the separate AI review.");
+    }
 
-      if (item.source) lines.push("   Source: " + item.source);
-      if (item.url) lines.push("   " + item.url);
-      lines.push("");
-    });
-
-    lines.push(
-      "These references were retrieved before answer generation and supplied to the separate AI review. This is AI review, not human clinical verification."
-    );
-  } else {
-    lines.push("No usable clinical references were supplied to the separate AI review.");
-  }
-
-  const evidenceMessage = addChatMessage(lines.join("\n"), "assistant");
-  evidenceMessage.style.whiteSpace = "pre-line";
-}                           
+    const evidenceMessage = addChatMessage(lines.join("\n"), "assistant");
+    evidenceMessage.style.whiteSpace = "pre-line";
+  }                                        
   function addChatMessage(message, type) {
 
     const wrapper = document.createElement("div");
