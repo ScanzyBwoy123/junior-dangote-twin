@@ -1383,3 +1383,17 @@ button {
 #memories #memoryList .memory-card button {
   font-size: 11px;
 }
+/* MATRIX AI BRAND LOGO */
+.brand-icon {
+  background: #06130d;
+  border: 1px solid rgba(73, 255, 145, 0.35);
+  box-shadow: 0 0 18px rgba(73, 255, 145, 0.2);
+  overflow: hidden;
+}
+
+.brand-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
